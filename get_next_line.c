@@ -6,11 +6,20 @@
 /*   By: ppanpais <ppanpais@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/20 20:47:52 by ppanpais          #+#    #+#             */
-/*   Updated: 2022/10/23 01:10:41 by ppanpais         ###   ########.fr       */
+/*   Updated: 2022/10/23 23:13:17 by ppanpais         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+
+void	*free_buf(t_BUF *buffer)
+{
+	if (buffer->buf)
+		free(buffer->buf);
+	if (buffer)
+		free(buffer);
+	return (NULL);
+}
 
 int	buf_len(int len, char *buf)
 {
@@ -19,7 +28,7 @@ int	buf_len(int len, char *buf)
 	if (len != 0)
 		return (len);
 	l = 0;
-	while(buf[l])
+	while (buf[l])
 		l++;
 	return (l);
 }
@@ -29,12 +38,14 @@ char	*gnl_get_line(t_BUF *storage)
 	char	*last;
 	char	*start;
 	char	*line;
-	size_t	i;
+	int		i;
 
+	if (storage->load == 0 && storage->finish)
+		return (NULL);
 	i = 0;
 	start = storage->buf;
-	if (ft_strchr(storage->buf, '\n'))
-		last = ft_strchr(storage->buf, '\n') + 1;
+	if (gnl_strlchr(storage->buf, '\n', storage->load))
+		last = gnl_strlchr(storage->buf, '\n', storage->load) + 1;
 	else
 		last = storage->buf + storage->load;
 	line = (char *)malloc(sizeof(char) * (last - start + 1));
@@ -42,26 +53,27 @@ char	*gnl_get_line(t_BUF *storage)
 	if (!line)
 		return (NULL);
 	storage->load -= last - start;
-	while(start < last)
+	while (start < last)
 		line[i++] = *start++;
-	i = 0;
-	while(*last)
+	while (i)
+		storage->buf[--i] = (char)0;
+	while (*last)
 		storage->buf[i++] = *last++;
 	return (line);
 }
 
-int	gnl_read_line(int fd, t_BUF *storage)
+int	gnl_read(int fd, t_BUF *storage, int buffer_size)
 {
 	char	*buf;
-	int	len;
+	int		len;
 
-	buf = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	buf = (char *)malloc(sizeof(char) * (buffer_size + 1));
 	if (!buf)
 		return (0);
 	len = 1;
 	while (len != 0)
 	{
-		len = read(fd, buf, BUFFER_SIZE);
+		len = read(fd, buf, buffer_size);
 		if (len < 0)
 		{
 			free(buf);
@@ -70,7 +82,7 @@ int	gnl_read_line(int fd, t_BUF *storage)
 		buf[len] = '\0';
 		if (!gnl_expand_buf(storage, buf, buf_len(len, buf)))
 			return (0);
-		if (ft_strchr(storage->buf, '\n'))
+		if (gnl_strlchr(storage->buf, '\n', storage->load))
 			break ;
 	}
 	if (len == 0)
@@ -82,26 +94,24 @@ int	gnl_read_line(int fd, t_BUF *storage)
 char	*get_next_line(int fd)
 {
 	static t_BUF	*buffer;
-	char		*line;
+	char			*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);	
+		return (NULL);
 	if (buffer == NULL)
 		buffer = gnl_create_buf();
 	if (!buffer)
+		return ((char *)(buffer = free_buf(buffer)));
+	if (BUFFER_SIZE < 42)
 	{
-		if (buffer->buf)
-			free(buffer);
-		free(buffer);
-		return (NULL);
+		if (gnl_read(fd, buffer, 42) == 0)
+			return ((char *)(buffer = free_buf(buffer)));
 	}
-	if (!gnl_read_line(fd, buffer))
-		return (NULL);
-	line = gnl_get_line(buffer);	
+	else
+		if (gnl_read(fd, buffer, BUFFER_SIZE) == 0)
+			return ((char *)(buffer = free_buf(buffer)));
+	line = gnl_get_line(buffer);
 	if (buffer->load == 0 && buffer->finish)
-	{
-		free(buffer->buf);
-		free(buffer);
-	}
+		buffer = free_buf(buffer);
 	return (line);
 }

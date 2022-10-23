@@ -6,7 +6,7 @@
 /*   By: ppanpais <ppanpais@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/20 20:48:04 by ppanpais          #+#    #+#             */
-/*   Updated: 2022/10/23 00:55:13 by ppanpais         ###   ########.fr       */
+/*   Updated: 2022/10/23 22:40:45 by ppanpais         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,6 @@ typedef struct big_buffer
 
 int		gnl_expand_buf(t_BUF *storage, char *buf, int len);
 char	*get_next_line(int fd);
-char	*ft_strchr(const char *s, int c);
-t_BUF	*gnl_create_buf();
+char	*gnl_strlchr(const char *s, int c, int limit);
+t_BUF	*gnl_create_buf(void);
 #endif

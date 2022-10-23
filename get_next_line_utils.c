@@ -6,7 +6,7 @@
 /*   By: ppanpais <ppanpais@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/20 20:48:20 by ppanpais          #+#    #+#             */
-/*   Updated: 2022/10/23 00:55:36 by ppanpais         ###   ########.fr       */
+/*   Updated: 2022/10/23 23:14:29 by ppanpais         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,43 +20,42 @@ char	*gnl_bufjoin(char *src, char *buf)
 
 	len = 0;
 	i = 0;
-	while(src[i++])
+	while (src[i++])
 		len++;
 	i = 0;
-	while(buf[i++])
+	while (buf[i++])
 		len++;
 	ret = (char *)malloc(sizeof(char) * (len + 1));
 	if (!ret)
 		return (NULL);
+	ret[len] = '\0';
 	i = 0;
-	while(*src)
+	while (*src)
 		ret[i++] = *src++;
 	src -= i;
-	while(*buf)
-		ret[i++] = *src++;
+	while (*buf)
+		ret[i++] = *buf++;
 	free(src);
 	return (ret);
 }
+
 /*
 	expand_buf: sub func = gnl_bufjoin
 	-join storage->buffer with the buf 
 	-(join = free(old storage->buf) and assign new one to it)
 	return 0 if allocation failed otherwise return 1
 */
+
 int	gnl_expand_buf(t_BUF *storage, char *buf, int len)
 {
-	int	i;
+	int		i;
 	char	*new_buf;
 
 	i = 0;
 	if (storage->load + len <= storage->size)
 	{
-		while(i < len)
-		{
-			(storage->buf)[storage->load] = buf[i];
-			storage->load++;
-			i++;
-		}
+		while (i < len)
+			(storage->buf)[storage->load++] = buf[i++];
 	}
 	else
 	{
@@ -64,7 +63,7 @@ int	gnl_expand_buf(t_BUF *storage, char *buf, int len)
 		if (!new_buf)
 		{
 			free(buf);
-			return(0);
+			return (0);
 		}
 		storage->load += len;
 		storage->size = storage->load;
@@ -73,24 +72,22 @@ int	gnl_expand_buf(t_BUF *storage, char *buf, int len)
 	return (1);
 }
 
-char	*ft_strchr(const char *s, int c)
+char	*gnl_strlchr(const char *s, int c, int limit)
 {
 	char	*p;
 
 	p = (char *)s;
-	while (*p)
+	while (*p && limit)
 	{
 		if (*p == (char)c)
 			return (p);
+		limit--;
 		p++;
 	}
-	if (*p == (char)c)
-		return (p);
-	else
-		return (NULL);
+	return (NULL);
 }
 
-t_BUF	*gnl_create_buf()
+t_BUF	*gnl_create_buf(void)
 {
 	t_BUF	*new;
 	size_t	i;
@@ -100,7 +97,7 @@ t_BUF	*gnl_create_buf()
 	if (!new)
 		return (NULL);
 	new->buf = (char *)malloc(sizeof(char) * 1025);
-	if(!new->buf)
+	if (!new->buf)
 	{
 		free(new);
 		return (NULL);
@@ -108,7 +105,7 @@ t_BUF	*gnl_create_buf()
 	new->size = 1024;
 	new->load = 0;
 	new->finish = 0;
-	while(i <= new->size)
+	while (i <= new->size)
 		(new->buf)[i++] = (char)0;
 	return (new);
 }
